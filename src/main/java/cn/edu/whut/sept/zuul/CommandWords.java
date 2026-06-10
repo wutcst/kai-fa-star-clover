@@ -13,6 +13,8 @@ public class CommandWords
         commands.put("go", new GoCommand());
         commands.put("help", new HelpCommand(this));
         commands.put("quit", new QuitCommand());
+        // 新增注册look命令
+        commands.put("look", new LookCommand());
     }
 
     public Command get(String word)
@@ -27,4 +29,5 @@ public class CommandWords
         }
         System.out.println();
     }
+
 }

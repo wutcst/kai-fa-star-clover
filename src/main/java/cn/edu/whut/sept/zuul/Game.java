@@ -17,11 +17,15 @@ public class Game
 {
     private Parser parser;
     private Room currentRoom;
+    // 新增：全局玩家实例
+    private Player player;
 
     public Game()
     {
         createRooms();
         parser = new Parser();
+        // 初始化玩家，出生在初始房间outside
+        player = new Player(currentRoom);
     }
 
     private void createRooms()
@@ -34,6 +38,11 @@ public class Game
         pub = new Room("in the campus pub");
         lab = new Room("in a computing lab");
         office = new Room("in the computing admin office");
+
+        // 新增：给各个房间生成地面物品（Item系统依赖）
+        outside.addRoomItem(new Item("key", "一把黄铜大门钥匙"));
+        lab.addRoomItem(new Item("potion", "红色恢复药水，可以恢复体力"));
+        office.addRoomItem(new Item("book", "一本写满笔记的实训手册"));
 
         // initialise room exits
         outside.setExit("east", theater);
@@ -88,5 +97,12 @@ public class Game
 
     public void setCurrentRoom(Room room){
         this.currentRoom = room;
+        // 同步更新玩家所在房间
+        player.setCurrentRoom(room);
+    }
+
+    // 新增：获取全局玩家对象，供所有Command调用
+    public Player getPlayer() {
+        return player;
     }
 }
