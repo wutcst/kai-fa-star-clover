@@ -18,13 +18,17 @@ public class GoCommand extends Command
             System.out.println("There is no door!");
         }
         else {
-            // ⭐ 关键：记录当前房间，用于 back
             game.pushHistory(currentRoom);
-
-            // 移动到新房间
             game.setCurrentRoom(nextRoom);
+            game.getVisitedRooms().add(nextRoom);
 
             System.out.println(nextRoom.getLongDescription());
+
+            game.getTime().tick();
+            System.out.println(game.getTime().getTime());
+
+            // ⭐ 随机事件
+            Event.trigger(game);
         }
 
         return false;

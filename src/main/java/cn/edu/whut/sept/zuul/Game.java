@@ -14,24 +14,31 @@
 package cn.edu.whut.sept.zuul;
 
 import java.util.Stack;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Game
 {
     private Parser parser;
-    private Room currentRoom;
-
-    // 用于实现 back 功能：保存访问历史
+    private Player player;
     private Stack<Room> roomHistory;
+    private HashMap<Room, NPC> npcMap;
+    private GameTime time;
+    private HashSet<Room> visitedRooms;
 
     public Game()
     {
-        createRooms();
         parser = new Parser();
-
         roomHistory = new Stack<>();
+
+        player = new Player(createRooms());
+        npcMap = new HashMap<>();
+        setupNPCs();
+        time = new GameTime();
+        visitedRooms = new HashSet<>();
     }
 
-    private void createRooms()
+    private Room createRooms()
     {
         Room outside, theater, pub, lab, office;
 
@@ -46,15 +53,12 @@ public class Game
         outside.setExit("west", pub);
 
         theater.setExit("west", outside);
-
         pub.setExit("east", outside);
-
         lab.setExit("north", outside);
         lab.setExit("east", office);
-
         office.setExit("west", lab);
 
-        currentRoom = outside;
+        return outside;
     }
 
     public void play()
@@ -71,30 +75,31 @@ public class Game
             }
         }
 
-        System.out.println("Thank you for playing.  Good bye.");
+        System.out.println("Thank you for playing. Goodbye.");
     }
 
     private void printWelcome()
     {
-        System.out.println();
         System.out.println("Welcome to the World of Zuul!");
-        System.out.println("World of Zuul is a new, incredibly boring adventure game.");
-        System.out.println("Type 'help' if you need help.");
+        System.out.println("Commands: go, back, status, map, search, talk, quests, fight, save, load");
         System.out.println();
-        System.out.println(currentRoom.getLongDescription());
+        System.out.println(player.getCurrentRoom().getLongDescription());
+    }
+
+    public Player getPlayer()
+    {
+        return player;
     }
 
     public Room getCurrentRoom()
     {
-        return currentRoom;
+        return player.getCurrentRoom();
     }
 
     public void setCurrentRoom(Room room)
     {
-        this.currentRoom = room;
+        player.setCurrentRoom(room);
     }
-
-    // ===== back功能核心 =====
 
     public void pushHistory(Room room)
     {
@@ -103,9 +108,35 @@ public class Game
 
     public Room popHistory()
     {
-        if (roomHistory.isEmpty()) {
-            return null;
-        }
+        if (roomHistory.isEmpty()) return null;
         return roomHistory.pop();
     }
+
+    private void setupNPCs()
+    {
+        NPC librarian = new NPC("Librarian", "Help me find a lost book.");
+
+        Quest q1 = new Quest("FindBook", "Find the lost book in the library", "GoldKey");
+
+        librarian.addQuest(q1);
+
+        npcMap.put(getCurrentRoom(), librarian);
+    }
+
+    public NPC getNPC(Room room)
+    {
+        return npcMap.get(room);
+    }
+
+    public GameTime getTime()
+    {
+        return time;
+    }
+
+    public HashSet<Room> getVisitedRooms()
+    {
+        return visitedRooms;
+    }
+
+
 }
