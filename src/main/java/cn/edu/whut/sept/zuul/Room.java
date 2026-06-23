@@ -9,6 +9,8 @@ public class Room
     private String description;
     private HashMap<String, Room> exits;
     private ArrayList<Item> items;
+    private NPC npc;
+    private Enemy enemy;
 
     public Room(String description)
     {
@@ -75,5 +77,29 @@ public class Room
             s += " " + i.getName();
         }
         return s;
+    }
+
+    // ================= NPC =================
+
+    public void setNPC(NPC npc)
+    {
+        this.npc = npc;
+    }
+
+    public NPC getNPC()
+    {
+        return npc;
+    }
+
+    // ================= Enemy =================
+
+    public void setEnemy(Enemy enemy)
+    {
+        this.enemy = enemy;
+    }
+
+    public Enemy getEnemy()
+    {
+        return enemy;
     }
 }

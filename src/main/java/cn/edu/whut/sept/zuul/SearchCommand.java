@@ -7,17 +7,23 @@ public class SearchCommand extends Command
     public boolean execute(Game game)
     {
         Random r = new Random();
-
         int chance = r.nextInt(100);
 
-        if (chance < 30) {
-            Room secret = new Room("in a SECRET ROOM filled with treasure!");
-            game.setCurrentRoom(secret);
+        System.out.println("🔍 You search the surroundings...");
 
-            System.out.println("🔓 You discovered a SECRET ROOM!");
+        if (chance < 30) {
+            System.out.println("🎁 You found a hidden item: GoldKey!");
+
+            game.getPlayer().addItem(new Item("GoldKey"));
+
+            // ⭐ 成就（可选）
+            game.getPlayer().unlockAchievement("collector");
+        }
+        else if (chance < 60) {
+            System.out.println("💰 You found nothing but footprints...");
         }
         else {
-            System.out.println("Nothing found...");
+            System.out.println("😶 Nothing unusual here.");
         }
 
         return false;

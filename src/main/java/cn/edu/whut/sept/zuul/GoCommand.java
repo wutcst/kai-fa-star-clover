@@ -20,12 +20,23 @@ public class GoCommand extends Command
         else {
             game.pushHistory(currentRoom);
             game.setCurrentRoom(nextRoom);
-            game.getVisitedRooms().add(nextRoom);
 
             System.out.println(nextRoom.getLongDescription());
 
             game.getTime().tick();
             System.out.println(game.getTime().getTime());
+
+            // ⭐ 探索成就
+            if (!game.getVisitedRooms().contains(nextRoom)) {
+                game.getVisitedRooms().add(nextRoom);
+                game.getPlayer().unlockAchievement("explorer");
+            }
+
+            if (game.getVisitedRooms().size() >= 10) {
+                game.getPlayer().unlockAchievement("explorer");
+            }
+
+
 
             // ⭐ 随机事件
             Event.trigger(game);

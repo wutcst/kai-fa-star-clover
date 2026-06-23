@@ -6,10 +6,24 @@ public class FightCommand extends Command
 {
     public boolean execute(Game game)
     {
-        Enemy enemy = new Enemy("Wolf", 50, 10);
         Player player = game.getPlayer();
+        Room room = game.getCurrentRoom();
 
-        System.out.println("⚔️ A wild " + enemy.getName() + " appears!");
+        Enemy enemy;
+
+        // ⭐ 根据房间判断敌人（为以后Boss做准备）
+        if (room.getShortDescription().contains("Dragon")) {
+            enemy = new Enemy("Dragon", 120, 25);
+            System.out.println("🔥 FINAL BOSS: DRAGON APPEARS!");
+        }
+        else if (room.getShortDescription().contains("Forest")) {
+            enemy = new Enemy("Wolf", 50, 10);
+            System.out.println("🐺 A wild Wolf appears!");
+        }
+        else {
+            enemy = new Enemy("Slime", 30, 5);
+            System.out.println("🟢 A Slime appears!");
+        }
 
         Random r = new Random();
 
@@ -20,19 +34,34 @@ public class FightCommand extends Command
 
             System.out.println("You hit the enemy for " + playerDamage);
 
-            if (enemy.isDead()) {
-                break;
-            }
+            if (enemy.isDead()) break;
 
             System.out.println("Enemy HP: " + enemy.getHp());
 
             System.out.println("Enemy attacks you!");
-            System.out.println("You lose " + enemy.getAttack() + " HP (not tracked yet)");
+
+            player.setHp(player.getHp() - enemy.getAttack());
+
+            System.out.println("You lose " + enemy.getAttack() + " HP");
+
+            if (player.getHp() <= 0) {
+                System.out.println("💀 You died! Game Over.");
+                game.checkEnding();   // ⭐ 加这个
+                return true;
+            }
         }
 
         System.out.println("🎉 Enemy defeated!");
-        player.addItem(new Item("WolfClaw"));
-        game.getPlayer().unlockAchievement("first_blood");
+
+        if (enemy.getName().equals("Dragon")) {
+            game.checkEnding();  // ⭐ Boss结局触发
+        }
+
+        // ⭐ 掉落系统（未来可扩展）
+        player.addItem(new Item(enemy.getName() + "Claw"));
+
+        // ⭐ 成就系统
+        player.unlockAchievement("first_blood");
 
         return false;
     }
