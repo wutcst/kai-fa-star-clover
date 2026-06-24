@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Player
 {
@@ -151,5 +153,16 @@ public class Player
     public HashMap<String, Achievement> getAchievements()
     {
         return achievements;
+    }
+
+    public List<String> getInventoryNames()
+    {
+        List<String> list = new ArrayList<>();
+
+        for (Item item : inventory) {
+            list.add(item.getName());
+        }
+
+        return list;
     }
 }

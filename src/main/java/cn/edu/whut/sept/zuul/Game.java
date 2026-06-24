@@ -19,7 +19,6 @@ import java.util.HashSet;
 
 public class Game
 {
-    private Parser parser;
     private Player player;
 
     private Stack<Room> roomHistory;
@@ -28,7 +27,9 @@ public class Game
     private GameTime time;
     private HashSet<Room> visitedRooms;
 
-    // ===== 房间成员变量（关键修复）=====
+    private boolean gameEnded = false;
+
+    // ===== 房间 =====
     private Room outside;
 
     private Room library;
@@ -60,59 +61,53 @@ public class Game
     private Room cave;
     private Room dragon;
 
-    private boolean gameEnded = false;
+    private CommandWords commands = new CommandWords();
+
+
 
     public Game()
     {
-        parser = new Parser();
         roomHistory = new Stack<>();
         npcMap = new HashMap<>();
         visitedRooms = new HashSet<>();
 
-        createRooms();        // ✔ 先创建地图
-        setupNPCs();          // ✔ 再绑定NPC
+        createRooms();
+        setupNPCs();
 
-        player = new Player(outside); // ✔ 玩家出生点
+        player = new Player(outside);
         time = new GameTime();
     }
 
-    // ===================== 地图 =====================
+    // ===================== 创建地图 =====================
     private void createRooms()
     {
-        // ===== 中心 =====
         outside = new Room("Campus Square");
 
-        // ===== 图书馆 =====
         library = new Room("Library");
         reading = new Room("Reading Room");
         archive = new Room("Archive");
 
-        // ===== 教学区 =====
         theater = new Room("Theater");
         classA = new Room("Classroom A");
         classB = new Room("Classroom B");
         professorOffice = new Room("Professor Office");
 
-        // ===== 实验区 =====
         lab = new Room("Lab");
         computer = new Room("Computer Room");
         server = new Room("Server Room");
         data = new Room("Data Center");
         ai = new Room("AI Lab");
 
-        // ===== 娱乐区 =====
         pub = new Room("Pub");
         lake = new Room("Lake");
         forest = new Room("Forest");
         garden = new Room("Garden");
 
-        // ===== 生活区 =====
         dorm = new Room("Dormitory");
         cafe = new Room("Cafeteria");
         gym = new Room("Gym");
         laundry = new Room("Laundry");
 
-        // ===== 隐藏区 =====
         tunnel = new Room("Secret Tunnel");
         cave = new Room("Crystal Cave");
         dragon = new Room("Dragon Lair");
@@ -123,32 +118,26 @@ public class Game
         outside.setExit("east", theater);
         outside.setExit("west", pub);
 
-        // 图书馆
         library.setExit("east", reading);
         reading.setExit("east", archive);
 
-        // 教学区
         theater.setExit("east", classA);
         classA.setExit("east", classB);
         classB.setExit("east", professorOffice);
 
-        // 实验区
         lab.setExit("east", computer);
         computer.setExit("east", server);
         server.setExit("east", data);
         data.setExit("east", ai);
 
-        // 娱乐区
         pub.setExit("east", lake);
         lake.setExit("east", forest);
         forest.setExit("east", garden);
 
-        // 生活区
         dorm.setExit("east", cafe);
         cafe.setExit("east", gym);
         gym.setExit("east", laundry);
 
-        // 隐藏区
         archive.setExit("down", tunnel);
         tunnel.setExit("down", cave);
         cave.setExit("down", dragon);
@@ -162,7 +151,6 @@ public class Game
 
         NPC professor = new NPC("Professor", "Help me complete my research.");
         professor.addQuest(new Quest("ResearchHelp", "Collect AI data samples", "AccessCard"));
-        professor.addQuest(new Quest("LabCleanup", "Clean the lab equipment", "LabKey"));
 
         NPC merchant = new NPC("Merchant", "I trade rare items.");
         merchant.addQuest(new Quest("TradeRun", "Bring rare item from cave", "DragonKey"));
@@ -173,7 +161,6 @@ public class Game
         NPC sage = new NPC("Sage", "The dragon guards the truth.");
         sage.addQuest(new Quest("DragonWarning", "Reach Dragon Lair", "TruthKey"));
 
-        // ===== 正确绑定（修复核心错误）=====
         npcMap.put(library, librarian);
         npcMap.put(professorOffice, professor);
         npcMap.put(pub, merchant);
@@ -181,27 +168,33 @@ public class Game
         npcMap.put(cave, sage);
     }
 
-    // ===================== 游戏主循环 =====================
-    public void play()
+    // =====================================================
+    // ⭐⭐⭐ 前端核心入口（重点改造）
+    // =====================================================
+    public GameResponse executeCommand(String input)
     {
-        System.out.println("Welcome to World of Zuul!");
-
-        boolean finished = false;
-
-        while (!finished) {
-            Command command = parser.getCommand();
-
-            if (command != null) {
-                finished = command.execute(this);
-            } else {
-                System.out.println("I don't understand...");
-            }
+        if (input == null || input.isEmpty()) {
+            return getGameState("Empty command");
         }
 
-        System.out.println("Game Over.");
-    }
+        String[] parts = input.split(" ");
+        String word1 = parts[0];
+        String word2 = parts.length > 1 ? parts[1] : null;
 
-    // ===================== 基础方法 =====================
+        Command command = new CommandWords().get(word1);
+
+        if (command == null) {
+            return getGameState("Unknown command");
+        }
+
+        command.setSecondWord(word2);
+
+        // ⭐ 关键：只执行，不接返回值
+        command.execute(this);
+
+        return getGameState("Command executed");
+    }
+    // ===================== 状态 =====================
     public Player getPlayer()
     {
         return player;
@@ -243,16 +236,12 @@ public class Game
         return visitedRooms;
     }
 
-    // ===================== 结局系统 =====================
+    // ===================== 结局 =====================
     public void checkEnding()
     {
         if (gameEnded) return;
 
         Player p = getPlayer();
-
-        System.out.println("\n======================");
-        System.out.println("        GAME END");
-        System.out.println("======================\n");
 
         boolean firstBlood = p.getAchievements().get("first_blood") != null
                 && p.getAchievements().get("first_blood").isUnlocked();
@@ -265,40 +254,53 @@ public class Game
 
         int hp = p.getHp();
 
-        // ================= 隐藏结局（最高优先级）=================
+        System.out.println("\n===== GAME END =====");
+
         if (firstBlood && collector && explorer && hp > 90) {
-
-            System.out.println("🌟 SECRET TRUE ENDING");
-            System.out.println("You have mastered everything in the campus.");
-            System.out.println("The world reveals its hidden truth...");
-
+            System.out.println("🌟 TRUE ENDING");
         }
-
-        // ================= GOOD ENDING =================
         else if (hp > 80 && firstBlood) {
-
             System.out.println("🏆 GOOD ENDING");
-            System.out.println("You defeated the boss and became the hero of campus.");
-
         }
-
-        // ================= NORMAL ENDING =================
         else if (hp > 40) {
-
             System.out.println("⚖️ NORMAL ENDING");
-            System.out.println("You survived the campus, but many mysteries remain.");
-
         }
-
-        // ================= BAD ENDING =================
         else {
-
             System.out.println("💀 BAD ENDING");
-            System.out.println("You were lost in the campus forever...");
         }
 
-        System.out.println("\n======================\n");
+        System.out.println("====================\n");
 
         gameEnded = true;
+    }
+
+    private GameResponse buildResponse(String msg)
+    {
+        return new GameResponse(
+                msg,
+                getCurrentRoom().getShortDescription(),
+                player.getHp(),
+                player.getLevel(),
+                player.getInventoryNames(),
+                "Map system ready",
+                "Quest system ready",
+                "NPC system ready",
+                player.getAchievements()
+        );
+    }
+
+    public GameResponse getGameState(String message)
+    {
+        return new GameResponse(
+                message,
+                getCurrentRoom().getShortDescription(),
+                player.getHp(),
+                player.getLevel(),
+                player.getInventoryNames(),
+                "Map system ready",
+                "Quest system ready",
+                "NPC system ready",
+                player.getAchievements()
+        );
     }
 }

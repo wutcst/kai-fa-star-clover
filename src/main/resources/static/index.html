@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Zuul Adventure</title>
+    <style>
+        body {
+            font-family: Arial;
+            background:#2c1e16;
+            color:#fff;
+            text-align:center;
+        }
+        .container {
+            width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background:#3b2a22;
+            border-radius:10px;
+        }
+        button {
+            margin:5px;
+            padding:8px 12px;
+            cursor:pointer;
+        }
+        .panel {
+            margin-top:10px;
+            padding:10px;
+            background:#222;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>🎮 Zuul Adventure Game</h2>
+
+    <div class="panel">
+        <p>📍 房间：<span id="room">-</span></p>
+        <p>❤️ HP：<span id="hp">-</span></p>
+        <p>⭐ Level：<span id="level">-</span></p>
+    </div>
+
+    <div class="panel">
+        <button onclick="cmd('go north')">⬆ 北</button>
+        <button onclick="cmd('go south')">⬇ 南</button>
+        <button onclick="cmd('go east')">➡ 东</button>
+        <button onclick="cmd('go west')">⬅ 西</button>
+    </div>
+
+    <div class="panel">
+        <button onclick="cmd('back')">↩ 返回</button>
+        <button onclick="cmd('status')">📊 状态</button>
+        <button onclick="cmd('map')">🗺 地图</button>
+        <button onclick="cmd('items')">🎒 背包</button>
+        <button onclick="cmd('talk')">💬 NPC</button>
+        <button onclick="cmd('quests')">📋 任务</button>
+        <button onclick="cmd('achievements')">🏆 成就</button>
+        <button onclick="cmd('fight')">⚔ 战斗</button>
+    </div>
+
+    <div class="panel">
+        <p>📜 输出：</p>
+        <div id="log">等待操作...</div>
+    </div>
+
+</div>
+
+<script>
+
+    const BASE = "http://127.0.0.1:8080/game";
+
+    async function cmd(input) {
+
+        const res = await fetch(BASE + "/command", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: "input=" + encodeURIComponent(input)
+        });
+
+        const data = await res.json();
+
+        update(data);
+    }
+
+    function update(data) {
+
+        if (!data) return;
+
+        document.getElementById("room").innerText = data.room || "-";
+        document.getElementById("hp").innerText = data.hp ?? "-";
+        document.getElementById("level").innerText = data.level ?? "-";
+
+        document.getElementById("log").innerText =
+            data.message || "OK";
+    }
+
+</script>
+
+</body>
+</html>
